@@ -21,7 +21,7 @@ export default function Home({recipes}) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <h1>Welcome To Kap's Joint</h1>
+      <h1>Welcome To Kaps Joint</h1>
 
       <ul className="recipe-list">
         {recipes?.length > 0 && recipes.map((recipe) => {
