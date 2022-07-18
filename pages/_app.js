@@ -8,7 +8,7 @@ function MyApp({ Component, pageProps }) {
     <nav className="header">
       <div className="">
         <Link href="/">
-          <a >Kapehe's Kitchen</a>
+          <a >Kapehes Kitchen</a>
         </Link>
       </div>
     </nav>
