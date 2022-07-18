@@ -1,64 +1,55 @@
+import { useState } from "react";
 import {
   sanityClient,
   urlFor,
   usePreviewSubscription,
   PortableText,
-} from '../../lib/sanity';
-
-import {useState} from 'react'
-import { useRouter } from 'next/router';
+} from "../../lib/sanity";
 
 const recipeQuery = `*[_type == "recipe" && slug.current == $slug][0]{
-    _id,
-    name,
-    slug,
-    mainImage,
-    instructions,
-    likes,
-    ingredient[]{
+      _id,
+      name,
+      slug,
+      mainImage,
+      ingredient[]{
         _key,
         unit,
         wholeNumber,
         fraction,
         ingredient->{
-            name
+          name
         }
-    },
-  }`;
+      },
+      instructions,
+      likes
+    }`;
 
 export default function OneRecipe({ data, preview }) {
-
-  const router = useRouter();
-
-  if(router.isFallback){
-    return <div className="">Loading...</div>
-  }
-
-  const {data: recipe} = usePreviewSubscription(recipeQuery, {
-    params: {slug: data.recipe.slug.current},
+  if (!data) return <div>Loading...</div>;
+  const { data: recipe } = usePreviewSubscription(recipeQuery, {
+    params: { slug: data.recipe?.slug.current },
     initialData: data,
-    enabled: preview
-  })
-  const [likes,setLikes] = useState(data?.recipe?.likes)
+    enabled: preview,
+  });
 
+  const [likes, setLikes] = useState(data?.recipe?.likes);
 
   const addLike = async () => {
-    const res = await fetch('/api/handle-like', { 
-      method: 'POST',
-      body: JSON.stringify({_id: recipe._id})
-    }).catch(error => console.log(error));
+    const res = await fetch("/api/handle-like", {
+      method: "POST",
+      body: JSON.stringify({ _id: recipe._id }),
+    }).catch((error) => console.log(error));
 
     const data = await res.json();
 
     setLikes(data.likes);
-  }
-
+  };
   return (
-    <article className="recipe"> 
+    <article className="recipe">
       <h1>{recipe.name}</h1>
 
-      <button className="like-btn" onClick={addLike}>
-        {likes} 💚
+      <button className="like-button" onClick={addLike}>
+        {likes} ❤️
       </button>
 
       <main className="content">
@@ -66,32 +57,31 @@ export default function OneRecipe({ data, preview }) {
         <div className="breakdown">
           <ul className="ingredients">
             {recipe.ingredient?.map((ingredient) => (
-                <li key={ingredient._key} className="ingredient">
-                    {ingredient?.wholeNumber}
-                    {ingredient?.fraction}
-                    {" "}
-                    {ingredient?.unit}
-                    <br />
-                    {ingredient?.ingredient?.name}
-                </li>
-
+              <li key={ingredient._key} className="ingredient">
+                {ingredient?.wholeNumber}
+                {ingredient?.fraction} {ingredient?.unit}
+                <br />
+                {ingredient?.ingredient?.name}
+              </li>
             ))}
           </ul>
-          <PortableText blocks={recipe?.instructions} className="instructions"/>
+          <PortableText
+            blocks={recipe?.instructions}
+            className="instructions"
+          />
         </div>
       </main>
     </article>
   );
 }
 
-// lets next know all possible dynamic paths
 export async function getStaticPaths() {
   const paths = await sanityClient.fetch(
     `*[_type == "recipe" && defined(slug.current)]{
-            "params": {
-                "slug": slug.current
-            }
-        }`
+      "params": {
+        "slug": slug.current
+      }
+    }`
   );
 
   return {
@@ -103,10 +93,5 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const { slug } = params;
   const recipe = await sanityClient.fetch(recipeQuery, { slug });
-
-  console.log(recipe)
-
-  return {
-    props: { data: { recipe }, preview: true },
-  };
+  return { props: { data: { recipe }, preview: true } };
 }
